@@ -1,0 +1,25 @@
+{
+  "name": "saucedemo-blackbox-testing",
+  "version": "1.0.0",
+  "description": "Implementasi Generative AI (Claude) dalam Penyusunan dan Eksekusi Test Case Black Box Testing pada Fitur Login dan Checkout Website SauceDemo",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests --timeout 60000",
+    "test:login": "mocha tests/login.test.js --timeout 60000",
+    "test:checkout": "mocha tests/checkout.test.js --timeout 60000"
+  },
+  "keywords": [
+    "selenium",
+    "webdriver",
+    "black-box-testing",
+    "saucedemo"
+  ],
+  "author": "Zahra Nabila Fajriyani",
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "^10.4.0"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.21.0"
+  }
+}

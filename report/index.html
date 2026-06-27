@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Implementasi Generative AI (Claude) — Black Box Testing SauceDemo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0B0E14;
+            --surface: #121722;
+            --surface-2: #171D2B;
+            --line: rgba(231, 236, 242, 0.09);
+            --line-strong: rgba(231, 236, 242, 0.16);
+            --text: #E7ECF2;
+            --text-muted: #7C8699;
+            --accent: #8B6CFF;
+            --accent-soft: rgba(139, 108, 255, 0.14);
+            --pass: #39FF88;
+            --pass-soft: rgba(57, 255, 136, 0.12);
+            --fail: #FF5C72;
+            --fail-soft: rgba(255, 92, 114, 0.12);
+            --warn: #FFB454;
+            --mono: 'JetBrains Mono', monospace;
+            --display: 'Space Grotesk', sans-serif;
+            --body: 'Inter', sans-serif;
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(1200px 600px at 80% -10%, rgba(139, 108, 255, 0.10), transparent 60%), var(--bg);
+            color: var(--text);
+            font-family: var(--body);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: var(--accent);
+        }
+
+        ::selection {
+            background: var(--accent-soft);
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .wrap {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: var(--display);
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .eyebrow {
+            font-family: var(--mono);
+            font-size: 12.5px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-soft);
+        }
+
+        .muted {
+            color: var(--text-muted);
+        }
+
+        code,
+        .mono {
+            font-family: var(--mono);
+        }
+
+        /* ---------- HERO ---------- */
+        header.hero {
+            border-bottom: 1px solid var(--line);
+            padding: 64px 0 56px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            line-height: 1.18;
+            margin-bottom: 18px;
+        }
+
+        .hero h1 .hl {
+            color: var(--accent);
+        }
+
+        .hero p.lead {
+            font-size: 16px;
+            color: var(--text-muted);
+            max-width: 540px;
+            margin-bottom: 22px;
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 28px;
+            font-size: 13.5px;
+        }
+
+        .meta-row span {
+            color: var(--text-muted);
+        }
+
+        .meta-row b {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .terminal {
+            background: var(--surface);
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.6);
+        }
+
+        .terminal .bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--line);
+            background: var(--surface-2);
+        }
+
+        .terminal .bar i {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            background: var(--line-strong);
+        }
+
+        .terminal .bar i:nth-child(1) {
+            background: #FF5C72;
+        }
+
+        .terminal .bar i:nth-child(2) {
+            background: #FFB454;
+        }
+
+        .terminal .bar i:nth-child(3) {
+            background: #39FF88;
+        }
+
+        .terminal .bar span {
+            margin-left: 8px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .terminal pre {
+            margin: 0;
+            padding: 18px 16px;
+            font-family: var(--mono);
+            font-size: 12.8px;
+            line-height: 1.7;
+            color: var(--text-muted);
+            min-height: 210px;
+            white-space: pre-wrap;
+        }
+
+        .terminal pre .p {
+            color: var(--pass);
+        }
+
+        .terminal pre .c {
+            color: var(--accent);
+        }
+
+        .terminal pre .w {
+            color: var(--text);
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 7px;
+            height: 14px;
+            background: var(--accent);
+            vertical-align: -2px;
+            animation: blink 1s steps(1) infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* ---------- SECTION GENERIC ---------- */
+        section {
+            padding: 64px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        section.no-border {
+            border-bottom: none;
+        }
+
+        .section-head {
+            max-width: 640px;
+            margin-bottom: 36px;
+        }
+
+        .section-head h2 {
+            font-size: clamp(22px, 3vw, 28px);
+            margin-bottom: 10px;
+        }
+
+        /* ---------- STAT CARDS ---------- */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 22px 20px;
+        }
+
+        .stat-card .num {
+            font-family: var(--display);
+            font-size: 30px;
+            color: var(--accent);
+        }
+
+        .stat-card .lbl {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ---------- TEST CASE TABLES ---------- */
+        .tc-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .tc-tab {
+            font-family: var(--mono);
+            font-size: 13px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--line-strong);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .tc-tab.active {
+            background: var(--accent-soft);
+            color: var(--accent);
+            border-color: transparent;
+        }
+
+        table.tc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        table.tc-table th,
+        table.tc-table td {
+            text-align: left;
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top;
+        }
+
+        table.tc-table th {
+            font-family: var(--mono);
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        table.tc-table td.id {
+            font-family: var(--mono);
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .badge {
+            font-family: var(--mono);
+            font-size: 11.5px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge.pass {
+            background: var(--pass-soft);
+            color: var(--pass);
+        }
+
+        .badge::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .tc-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: var(--surface);
+        }
+
+        .tc-panel {
+            display: none;
+        }
+
+        .tc-panel.active {
+            display: block;
+        }
+
+        /* ---------- SIMULATOR ---------- */
+        .sim-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .sim-panel {
+            background: var(--surface);
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sim-panel .panel-bar {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-2);
+        }
+
+        .sim-panel .panel-bar .t {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+
+        .scenario-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .scn-btn {
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: var(--surface-2);
+            border: 1px solid var(--line-strong);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .scn-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .scn-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        #console-log {
+            flex: 1;
+            padding: 16px;
+            font-family: var(--mono);
+            font-size: 12.6px;
+            line-height: 1.7;
+            overflow-y: auto;
+            max-height: 360px;
+            color: var(--text-muted);
+        }
+
+        #console-log .ln-pass {
+            color: var(--pass);
+        }
+
+        #console-log .ln-fail {
+            color: var(--fail);
+        }
+
+        #console-log .ln-info {
+            color: var(--text);
+        }
+
+        #console-log .ln-step {
+            color: var(--accent);
+        }
+
+        .app-screen {
+            flex: 1;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-brand {
+            font-family: var(--display);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text);
+            font-size: 15px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-pill {
+            font-family: var(--mono);
+            font-size: 11px;
+            background: var(--accent);
+            color: #0B0E14;
+            border-radius: 999px;
+            padding: 2px 8px;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-family: var(--mono);
+        }
+
+        .field input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--line-strong);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 13.5px;
+            font-family: var(--body);
+        }
+
+        .field input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            font-family: var(--body);
+            font-weight: 600;
+            font-size: 13.5px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            background: var(--accent);
+            color: #0B0E14;
+        }
+
+        .btn.ghost {
+            background: transparent;
+            border: 1px solid var(--line-strong);
+            color: var(--text);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .err-box {
+            background: var(--fail-soft);
+            color: var(--fail);
+            border: 1px solid rgba(255, 92, 114, 0.35);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12.8px;
+            margin-bottom: 14px;
+            font-family: var(--mono);
+            display: none;
+        }
+
+        .err-box.show {
+            display: block;
+        }
+
+        .creds-hint {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 14px;
+            font-family: var(--mono);
+            line-height: 1.8;
+        }
+
+        .product-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 13px;
+        }
+
+        .product-row:last-child {
+            border-bottom: none;
+        }
+
+        .product-row .name {
+            font-weight: 600;
+        }
+
+        .product-row .price {
+            color: var(--text-muted);
+            font-family: var(--mono);
+            margin-left: 10px;
+        }
+
+        .mini-btn {
+            font-family: var(--mono);
+            font-size: 11.5px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--line-strong);
+            background: var(--surface-2);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .mini-btn.added {
+            background: var(--pass-soft);
+            color: var(--pass);
+            border-color: transparent;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 6px 0;
+            color: var(--text-muted);
+        }
+
+        .summary-row.total {
+            color: var(--text);
+            font-weight: 700;
+            border-top: 1px solid var(--line);
+            margin-top: 6px;
+            padding-top: 12px;
+        }
+
+        .complete {
+            text-align: center;
+            padding: 30px 10px;
+        }
+
+        .complete .check {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--pass);
+            color: var(--pass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 22px;
+        }
+
+        .complete h3 {
+            font-family: var(--display);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .complete p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ---------- SOURCE ---------- */
+        .src-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .src-tab {
+            font-family: var(--mono);
+            font-size: 12.5px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--line-strong);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .src-tab.active {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .src-block {
+            display: none;
+        }
+
+        .src-block.active {
+            display: block;
+        }
+
+        .src-block pre {
+            margin: 0;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+            font-family: var(--mono);
+            font-size: 12.3px;
+            line-height: 1.7;
+            overflow-x: auto;
+            color: var(--text-muted);
+        }
+
+        .src-block pre .kw {
+            color: var(--accent);
+        }
+
+        .src-block pre .cm {
+            color: #4D5870;
+        }
+
+        .src-block pre .st {
+            color: var(--pass);
+        }
+
+        footer {
+            padding: 36px 0 50px;
+        }
+
+        footer .wrap {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 880px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .sim-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+            }
+
+            html {
+                scroll-behavior: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="hero">
+        <div class="wrap hero-grid">
+            <div>
+                <div class="eyebrow">Laporan Praktikum · Black Box Testing</div>
+                <h1>Implementasi <span class="hl">Generative AI (Claude)</span> dalam Penyusunan dan Eksekusi Test Case
+                    Black Box Testing pada Fitur Login dan Checkout Website SauceDemo</h1>
+                <p class="lead">Dashboard ini merangkum proses penyusunan test case, skrip Selenium WebDriver, serta
+                    simulator interaktif yang merepresentasikan eksekusi pengujian terhadap fitur Login dan Checkout
+                    pada <code>saucedemo.com</code>.</p>
+                <div class="meta-row">
+                    <span>Penyusun: <b><br>1. Zahra Nabila Fajriyani(0110124032)<br>2. Fikas Nasfarizi(0110124059)<br>3. Mochammad Irvan Wijaya(0110124089)<br>4. Rangga Saputra(0110124153)<br>5. Nurul Syahidah(0110124243)<br>6. Fajrin Aulia Fitrah Harahap(0110122022)</b></span>
+                    <span>Target: <b>www.saucedemo.com</b></span>
+                    <span>Tools: <b>Selenium WebDriver, Mocha, Claude</b></span>
+                </div>
+            </div>
+            <div class="terminal">
+                <div class="bar"><i></i><i></i><i></i><span>mocha — login.test.js</span></div>
+                <pre id="hero-console">$ npm test<span class="cursor"></span></pre>
+            </div>
+        </div>
+    </header>
+
+    <section class="no-border">
+        <div class="wrap">
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="num">10</div>
+                    <div class="lbl">Total Test Case Black Box</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num">2</div>
+                    <div class="lbl">Fitur Diuji: Login &amp; Checkout</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num">10/10</div>
+                    <div class="lbl">Status Eksekusi: PASS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num">Claude</div>
+                    <div class="lbl">AI Assistant Penyusunan Test Case</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Rancangan Test Case</h2>
+                <p class="muted">Disusun menggunakan teknik <em>Equivalence Partitioning</em> dan <em>Error
+                        Guessing</em>, dibantu Generative AI (Claude) untuk merumuskan skenario dan nilai input yang
+                    representatif.</p>
+            </div>
+
+            <div class="tc-tabs">
+                <button class="tc-tab active" data-tab="login">Fitur Login</button>
+                <button class="tc-tab" data-tab="checkout">Fitur Checkout</button>
+            </div>
+
+            <div class="tc-wrap">
+                <div class="tc-panel active" id="panel-login">
+                    <table class="tc-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Skenario</th>
+                                <th>Input</th>
+                                <th>Hasil yang Diharapkan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="id">TC-LOGIN-01</td>
+                                <td>Login dengan kredensial valid</td>
+                                <td>standard_user / secret_sauce</td>
+                                <td>Redirect ke halaman Products</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-LOGIN-02</td>
+                                <td>Login dengan password salah</td>
+                                <td>standard_user / salah_password</td>
+                                <td>"Username and password do not match"</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-LOGIN-03</td>
+                                <td>Login dengan akun terkunci</td>
+                                <td>locked_out_user / secret_sauce</td>
+                                <td>"Sorry, this user has been locked out."</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-LOGIN-04</td>
+                                <td>Username dikosongkan</td>
+                                <td>"" / secret_sauce</td>
+                                <td>"Username is required"</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-LOGIN-05</td>
+                                <td>Password dikosongkan</td>
+                                <td>standard_user / ""</td>
+                                <td>"Password is required"</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tc-panel" id="panel-checkout">
+                    <table class="tc-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Skenario</th>
+                                <th>Input</th>
+                                <th>Hasil yang Diharapkan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="id">TC-CHECKOUT-01</td>
+                                <td>Badge cart bertambah saat add to cart</td>
+                                <td>2 produk ditambahkan</td>
+                                <td>Badge keranjang menunjukkan "2"</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-CHECKOUT-02</td>
+                                <td>Checkout dengan data lengkap</td>
+                                <td>First Name, Last Name, Postal Code terisi</td>
+                                <td>"Thank you for your order!"</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-CHECKOUT-03</td>
+                                <td>First Name dikosongkan</td>
+                                <td>First Name = ""</td>
+                                <td>"First Name is required"</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-CHECKOUT-04</td>
+                                <td>Postal Code dikosongkan</td>
+                                <td>Postal Code = ""</td>
+                                <td>"Postal Code is required"</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="id">TC-CHECKOUT-05</td>
+                                <td>Verifikasi total harga</td>
+                                <td>Backpack + Bolt T-Shirt</td>
+                                <td>Total = Item Total + Tax</td>
+                                <td><span class="badge pass">PASS</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Simulator Eksekusi Test Case</h2>
+                <p class="muted">Bagian ini bersifat interaktif. Coba ketik input pada panel kanan secara manual, atau
+                    klik salah satu skenario di bawah untuk menjalankan eksekusi otomatis lengkap dengan log konsol di
+                    panel kiri — merepresentasikan apa yang dilakukan skrip Selenium WebDriver.</p>
+            </div>
+
+            <div class="sim-panel" style="margin-bottom:18px;">
+                <div class="scenario-bar" id="scenario-bar"></div>
+            </div>
+
+            <div class="sim-grid">
+                <div class="sim-panel">
+                    <div class="panel-bar"><span class="t">CONSOLE — mocha test runner</span><button class="mini-btn"
+                            id="clear-log">clear</button></div>
+                    <div id="console-log">menunggu eksekusi test case…</div>
+                </div>
+
+                <div class="sim-panel">
+                    <div class="panel-bar"><span class="t" id="app-url">saucedemo.com/index.html</span></div>
+                    <div class="app-screen" id="app-screen"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Source Code Selenium WebDriver</h2>
+                <p class="muted">Skrip pengujian otomatis yang digunakan untuk mengeksekusi test case di atas, ditulis
+                    dengan Selenium WebDriver, Mocha, dan Assert.</p>
+            </div>
+            <div class="src-tabs">
+                <button class="src-tab active" data-src="login">tests/login.test.js</button>
+                <button class="src-tab" data-src="checkout">tests/checkout.test.js</button>
+            </div>
+            <div class="src-block active" id="src-login">
+                <pre><span class="cm">// TC-LOGIN-01: Login dengan kredensial valid</span>
+<span class="kw">it</span>(<span class="st">"Should berhasil login dengan akun valid"</span>, <span class="kw">async</span> () => {
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"user-name"</span>)).sendKeys(<span class="st">"standard_user"</span>);
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"password"</span>)).sendKeys(<span class="st">"secret_sauce"</span>);
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"login-button"</span>)).click();
+  <span class="kw">await</span> driver.wait(until.urlContains(<span class="st">"inventory.html"</span>), <span class="kw">5000</span>);
+  assert.ok((<span class="kw">await</span> driver.getCurrentUrl()).includes(<span class="st">"inventory.html"</span>));
+});
+
+<span class="cm">// TC-LOGIN-03: Login dengan akun locked_out_user</span>
+<span class="kw">it</span>(<span class="st">"Should menolak login untuk akun locked_out_user"</span>, <span class="kw">async</span> () => {
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"user-name"</span>)).sendKeys(<span class="st">"locked_out_user"</span>);
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"password"</span>)).sendKeys(<span class="st">"secret_sauce"</span>);
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"login-button"</span>)).click();
+  <span class="kw">const</span> errorMsg = <span class="kw">await</span> driver.findElement(By.css(<span class="st">"[data-test='error']"</span>)).getText();
+  assert.ok(errorMsg.includes(<span class="st">"locked out"</span>));
+});</pre>
+            </div>
+            <div class="src-block" id="src-checkout">
+                <pre><span class="cm">// TC-CHECKOUT-02: Checkout lengkap sampai selesai</span>
+<span class="kw">it</span>(<span class="st">"Should berhasil checkout sampai selesai"</span>, <span class="kw">async</span> () => {
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"add-to-cart-sauce-labs-backpack"</span>)).click();
+  <span class="kw">await</span> driver.findElement(By.className(<span class="st">"shopping_cart_link"</span>)).click();
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"checkout"</span>)).click();
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"first-name"</span>)).sendKeys(<span class="st">"Zahra"</span>);
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"last-name"</span>)).sendKeys(<span class="st">"Nurul Fikri"</span>);
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"postal-code"</span>)).sendKeys(<span class="st">"16411"</span>);
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"continue"</span>)).click();
+  <span class="kw">await</span> driver.findElement(By.id(<span class="st">"finish"</span>)).click();
+  <span class="kw">const</span> msg = <span class="kw">await</span> driver.findElement(By.className(<span class="st">"complete-header"</span>)).getText();
+  assert.strictEqual(msg, <span class="st">"Thank you for your order!"</span>);
+});</pre>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <span>Sekolah Tinggi Teknologi Terpadu Nurul Fikri — Tahun 2026</span>
+            <span>Disusun dengan bantuan Generative AI (Claude) · Selenium WebDriver · Mocha</span>
+        </div>
+    </footer>
+
+    <script>
+        // ============================================================================
+        // DATA
+        // ============================================================================
+        const VALID_USERS = ["standard_user", "problem_user", "performance_glitch_user", "error_user", "visual_user"];
+        const LOCKED_USER = "locked_out_user";
+        const PASSWORD = "secret_sauce";
+
+        const PRODUCTS = [
+            { id: "backpack", name: "Sauce Labs Backpack", price: 29.99 },
+            { id: "bike-light", name: "Sauce Labs Bike Light", price: 9.99 },
+            { id: "bolt-t-shirt", name: "Sauce Labs Bolt T-Shirt", price: 15.99 },
+        ];
+
+        const state = {
+            page: "login", // login | inventory | cart | checkout1 | checkout2 | complete
+            cart: new Set(),
+            firstName: "", lastName: "", postal: "",
+            loginError: "", checkoutError: ""
+        };
+
+        // ============================================================================
+        // RENDER: APP SCREEN (panel kanan)
+        // ============================================================================
+        const appScreen = document.getElementById("app-screen");
+        const appUrl = document.getElementById("app-url");
+
+        function fmt(n) { return "$" + n.toFixed(2); }
+
+        function render() {
+            appScreen.innerHTML = "";
+            if (state.page === "login") return renderLogin();
+            if (state.page === "inventory") return renderInventory();
+            if (state.page === "cart") return renderCart();
+            if (state.page === "checkout1") return renderCheckout1();
+            if (state.page === "checkout2") return renderCheckout2();
+            if (state.page === "complete") return renderComplete();
+        }
+
+        function renderLogin() {
+            appUrl.textContent = "saucedemo.com/index.html";
+            appScreen.innerHTML = `
+    <div class="app-brand">Swag Labs</div>
+    <div class="err-box ${state.loginError ? 'show' : ''}">${state.loginError}</div>
+    <div class="field"><label>USERNAME</label><input id="in-user" placeholder="standard_user" /></div>
+    <div class="field"><label>PASSWORD</label><input id="in-pass" type="password" placeholder="secret_sauce" /></div>
+    <button class="btn" id="btn-login">Login</button>
+    <div class="creds-hint">Akun valid: standard_user, problem_user, error_user, visual_user, locked_out_user&#10;Password untuk semua akun: secret_sauce</div>
+  `;
+            document.getElementById("btn-login").onclick = () => {
+                const u = document.getElementById("in-user").value.trim();
+                const p = document.getElementById("in-pass").value;
+                doLogin(u, p, true);
+            };
+        }
+
+        function doLogin(u, p, manual) {
+            if (!u) { state.loginError = "Epic sadface: Username is required"; }
+            else if (!p) { state.loginError = "Epic sadface: Password is required"; }
+            else if (u === LOCKED_USER) { state.loginError = "Epic sadface: Sorry, this user has been locked out."; }
+            else if (!VALID_USERS.includes(u) || p !== PASSWORD) { state.loginError = "Epic sadface: Username and password do not match any user in this service"; }
+            else { state.loginError = ""; state.page = "inventory"; render(); return true; }
+            render();
+            return false;
+        }
+
+        function renderInventory() {
+            appUrl.textContent = "saucedemo.com/inventory.html";
+            const rows = PRODUCTS.map(p => `
+    <div class="product-row">
+      <div><span class="name">${p.name}</span><span class="price">${fmt(p.price)}</span></div>
+      <button class="mini-btn ${state.cart.has(p.id) ? 'added' : ''}" data-pid="${p.id}">${state.cart.has(p.id) ? 'Added ✓' : 'Add to cart'}</button>
+    </div>`).join("");
+            appScreen.innerHTML = `
+    <div class="app-brand">Products <span class="cart-pill">cart: ${state.cart.size}</span></div>
+    ${rows}
+    <div style="margin-top:18px; display:flex; justify-content:flex-end;">
+      <button class="btn ghost" id="goto-cart">Lihat Keranjang →</button>
+    </div>
+  `;
+            PRODUCTS.forEach(p => {
+                const btn = appScreen.querySelector(`[data-pid="${p.id}"]`);
+                btn.onclick = () => { state.cart.has(p.id) ? state.cart.delete(p.id) : state.cart.add(p.id); render(); };
+            });
+            document.getElementById("goto-cart").onclick = () => { state.page = "cart"; render(); };
+        }
+
+        function renderCart() {
+            appUrl.textContent = "saucedemo.com/cart.html";
+            const items = PRODUCTS.filter(p => state.cart.has(p.id));
+            const rows = items.length ? items.map(p => `<div class="product-row"><span class="name">${p.name}</span><span class="price">${fmt(p.price)}</span></div>`).join("")
+                : `<p class="muted" style="font-size:13px;">Keranjang masih kosong.</p>`;
+            appScreen.innerHTML = `
+    <div class="app-brand">Your Cart</div>
+    ${rows}
+    <div style="margin-top:18px; display:flex; justify-content:space-between;">
+      <button class="btn ghost" id="back-inv">← Continue Shopping</button>
+      <button class="btn" id="go-checkout" ${items.length ? '' : 'disabled'}>Checkout</button>
+    </div>
+  `;
+            document.getElementById("back-inv").onclick = () => { state.page = "inventory"; render(); };
+            document.getElementById("go-checkout").onclick = () => { state.page = "checkout1"; render(); };
+        }
+
+        function renderCheckout1() {
+            appUrl.textContent = "saucedemo.com/checkout-step-one.html";
+            appScreen.innerHTML = `
+    <div class="app-brand">Checkout: Your Info</div>
+    <div class="err-box ${state.checkoutError ? 'show' : ''}">${state.checkoutError}</div>
+    <div class="field"><label>FIRST NAME</label><input id="cf-fname" value="${state.firstName}" /></div>
+    <div class="field"><label>LAST NAME</label><input id="cf-lname" value="${state.lastName}" /></div>
+    <div class="field"><label>POSTAL CODE</label><input id="cf-postal" value="${state.postal}" /></div>
+    <div style="display:flex; justify-content:space-between;">
+      <button class="btn ghost" id="cf-cancel">Cancel</button>
+      <button class="btn" id="cf-continue">Continue</button>
+    </div>
+  `;
+            document.getElementById("cf-cancel").onclick = () => { state.page = "cart"; render(); };
+            document.getElementById("cf-continue").onclick = () => {
+                state.firstName = document.getElementById("cf-fname").value.trim();
+                state.lastName = document.getElementById("cf-lname").value.trim();
+                state.postal = document.getElementById("cf-postal").value.trim();
+                submitCheckoutForm(true);
+            };
+        }
+
+        function submitCheckoutForm() {
+            if (!state.firstName) { state.checkoutError = "Error: First Name is required"; }
+            else if (!state.lastName) { state.checkoutError = "Error: Last Name is required"; }
+            else if (!state.postal) { state.checkoutError = "Error: Postal Code is required"; }
+            else { state.checkoutError = ""; state.page = "checkout2"; render(); return true; }
+            render();
+            return false;
+        }
+
+        function renderCheckout2() {
+            appUrl.textContent = "saucedemo.com/checkout-step-two.html";
+            const items = PRODUCTS.filter(p => state.cart.has(p.id));
+            const subtotal = items.reduce((s, p) => s + p.price, 0);
+            const tax = Math.round(subtotal * 0.08 * 100) / 100;
+            const total = Math.round((subtotal + tax) * 100) / 100;
+            const rows = items.map(p => `<div class="product-row"><span class="name">${p.name}</span><span class="price">${fmt(p.price)}</span></div>`).join("");
+            appScreen.innerHTML = `
+    <div class="app-brand">Checkout: Overview</div>
+    ${rows}
+    <div class="summary-row"><span>Item total</span><span>${fmt(subtotal)}</span></div>
+    <div class="summary-row"><span>Tax</span><span>${fmt(tax)}</span></div>
+    <div class="summary-row total"><span>Total</span><span>${fmt(total)}</span></div>
+    <div style="margin-top:18px; display:flex; justify-content:space-between;">
+      <button class="btn ghost" id="co-cancel">Cancel</button>
+      <button class="btn" id="co-finish">Finish</button>
+    </div>
+  `;
+            document.getElementById("co-cancel").onclick = () => { state.page = "cart"; render(); };
+            document.getElementById("co-finish").onclick = () => { state.page = "complete"; render(); };
+        }
+
+        function renderComplete() {
+            appUrl.textContent = "saucedemo.com/checkout-complete.html";
+            appScreen.innerHTML = `
+    <div class="complete">
+      <div class="check">✓</div>
+      <h3>Thank you for your order!</h3>
+      <p>Your order has been dispatched, and will arrive just as fast as the pony can get there!</p>
+      <button class="btn ghost" id="back-home" style="margin-top:16px;">Back Home</button>
+    </div>
+  `;
+            document.getElementById("back-home").onclick = () => {
+                state.page = "login"; state.cart.clear(); state.firstName = ""; state.lastName = ""; state.postal = "";
+                render();
+            };
+        }
+
+        render();
+
+        // ============================================================================
+        // CONSOLE LOG
+        // ============================================================================
+        const logEl = document.getElementById("console-log");
+        function log(text, cls) {
+            const line = document.createElement("div");
+            if (cls) line.className = cls;
+            line.textContent = text;
+            logEl.appendChild(line);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        function clearLog() { logEl.innerHTML = ""; }
+        document.getElementById("clear-log").onclick = clearLog;
+
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // ============================================================================
+        // SCENARIOS (automated playback)
+        // ============================================================================
+        const SCENARIOS = [
+            {
+                id: "TC-LOGIN-01", label: "TC-LOGIN-01 · Login valid", run: async () => {
+                    resetApp();
+                    log("describe('Fitur Login') > TC-LOGIN-01", "ln-step");
+                    await wait(400); log("  → sendKeys(user-name, 'standard_user')");
+                    await wait(400); log("  → sendKeys(password, 'secret_sauce')");
+                    await wait(400); log("  → click(login-button)");
+                    const ok = doLogin("standard_user", PASSWORD);
+                    await wait(400);
+                    log(ok ? "  ✓ assert urlContains('inventory.html')" : "  ✗ assertion failed", ok ? "ln-pass" : "ln-fail");
+                    log(ok ? "1 passing — PASS" : "1 failing — FAIL", ok ? "ln-pass" : "ln-fail");
+                }
+            },
+            {
+                id: "TC-LOGIN-03", label: "TC-LOGIN-03 · Akun terkunci", run: async () => {
+                    resetApp();
+                    log("describe('Fitur Login') > TC-LOGIN-03", "ln-step");
+                    await wait(400); log("  → sendKeys(user-name, 'locked_out_user')");
+                    await wait(400); log("  → sendKeys(password, 'secret_sauce')");
+                    await wait(400); log("  → click(login-button)");
+                    doLogin("locked_out_user", PASSWORD);
+                    await wait(400);
+                    log("  ✓ assert errorMsg.includes('locked out')", "ln-pass");
+                    log("1 passing — PASS", "ln-pass");
+                }
+            },
+            {
+                id: "TC-LOGIN-04", label: "TC-LOGIN-04 · Username kosong", run: async () => {
+                    resetApp();
+                    log("describe('Fitur Login') > TC-LOGIN-04", "ln-step");
+                    await wait(400); log("  → sendKeys(password, 'secret_sauce')");
+                    await wait(400); log("  → click(login-button)");
+                    doLogin("", PASSWORD);
+                    await wait(400);
+                    log("  ✓ assert errorMsg.includes('Username is required')", "ln-pass");
+                    log("1 passing — PASS", "ln-pass");
+                }
+            },
+            {
+                id: "TC-CHECKOUT-01", label: "TC-CHECKOUT-01 · Badge cart", run: async () => {
+                    resetApp(); doLogin("standard_user", PASSWORD);
+                    log("describe('Fitur Checkout') > TC-CHECKOUT-01", "ln-step");
+                    await wait(300); log("  → click(add-to-cart-backpack)"); state.cart.add("backpack"); render();
+                    await wait(400); log("  → click(add-to-cart-bike-light)"); state.cart.add("bike-light"); render();
+                    await wait(400);
+                    log(`  ✓ assert cartBadge === '${state.cart.size}'`, "ln-pass");
+                    log("1 passing — PASS", "ln-pass");
+                }
+            },
+            {
+                id: "TC-CHECKOUT-02", label: "TC-CHECKOUT-02 · Checkout lengkap", run: async () => {
+                    resetApp(); doLogin("standard_user", PASSWORD);
+                    log("describe('Fitur Checkout') > TC-CHECKOUT-02", "ln-step");
+                    await wait(300); log("  → click(add-to-cart-backpack)"); state.cart.add("backpack"); render();
+                    await wait(300); log("  → click(shopping_cart_link)"); state.page = "cart"; render();
+                    await wait(300); log("  → click(checkout)"); state.page = "checkout1"; render();
+                    await wait(300); log("  → sendKeys(first-name, 'Zahra')"); state.firstName = "Zahra";
+                    await wait(300); log("  → sendKeys(last-name, 'Nurul Fikri')"); state.lastName = "Nurul Fikri";
+                    await wait(300); log("  → sendKeys(postal-code, '16411')"); state.postal = "16411"; render();
+                    await wait(300); log("  → click(continue)"); submitCheckoutForm();
+                    await wait(300); log("  → click(finish)"); state.page = "complete"; render();
+                    await wait(300);
+                    log("  ✓ assert successMsg === 'Thank you for your order!'", "ln-pass");
+                    log("1 passing — PASS", "ln-pass");
+                }
+            },
+            {
+                id: "TC-CHECKOUT-03", label: "TC-CHECKOUT-03 · First Name kosong", run: async () => {
+                    resetApp(); doLogin("standard_user", PASSWORD);
+                    log("describe('Fitur Checkout') > TC-CHECKOUT-03", "ln-step");
+                    await wait(300); log("  → click(add-to-cart-backpack)"); state.cart.add("backpack");
+                    await wait(300); log("  → click(checkout)"); state.page = "checkout1"; render();
+                    await wait(300); log("  → sendKeys(last-name, 'Nurul Fikri')"); state.lastName = "Nurul Fikri";
+                    await wait(300); log("  → sendKeys(postal-code, '16411')"); state.postal = "16411";
+                    await wait(300); log("  → click(continue), first-name dibiarkan kosong");
+                    state.firstName = ""; submitCheckoutForm();
+                    await wait(300);
+                    log("  ✓ assert errorMsg.includes('First Name is required')", "ln-pass");
+                    log("1 passing — PASS", "ln-pass");
+                }
+            },
+        ];
+
+        const scenarioBar = document.getElementById("scenario-bar");
+        SCENARIOS.forEach(s => {
+            const btn = document.createElement("button");
+            btn.className = "scn-btn"; btn.textContent = s.label;
+            btn.onclick = async () => {
+                scenarioBar.querySelectorAll("button").forEach(b => b.disabled = true);
+                await s.run();
+                scenarioBar.querySelectorAll("button").forEach(b => b.disabled = false);
+            };
+            scenarioBar.appendChild(btn);
+        });
+
+        function resetApp() {
+            state.page = "login"; state.cart.clear(); state.firstName = ""; state.lastName = ""; state.postal = "";
+            state.loginError = ""; state.checkoutError = "";
+            render();
+        }
+
+        // ============================================================================
+        // HERO CONSOLE TYPE-ON ANIMATION
+        // ============================================================================
+        (async function heroAnim() {
+            const el = document.getElementById("hero-console");
+            const lines = [
+                { t: "$ npm test", c: "w" },
+                { t: "\n\n  Fitur Login - Black Box Testing SauceDemo", c: "c" },
+                { t: "\n    ✓ TC-LOGIN-01 berhasil login dengan akun valid", c: "p" },
+                { t: "\n    ✓ TC-LOGIN-02 menolak login dengan password salah", c: "p" },
+                { t: "\n    ✓ TC-LOGIN-03 menolak login untuk akun locked_out_user", c: "p" },
+                { t: "\n\n  Fitur Checkout - Black Box Testing SauceDemo", c: "c" },
+                { t: "\n    ✓ TC-CHECKOUT-01 badge cart bertambah", c: "p" },
+                { t: "\n    ✓ TC-CHECKOUT-02 berhasil checkout sampai selesai", c: "p" },
+                { t: "\n\n  10 passing", c: "p" },
+            ];
+            let html = "";
+            for (const l of lines) {
+                html += `<span class="${l.c}">${l.t}</span>`;
+                el.innerHTML = html + '<span class="cursor"></span>';
+                await wait(220);
+            }
+        })();
+
+        // ============================================================================
+        // TABS
+        // ============================================================================
+        document.querySelectorAll(".tc-tab").forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll(".tc-tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".tc-panel").forEach(p => p.classList.remove("active"));
+                tab.classList.add("active");
+                document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+            };
+        });
+        document.querySelectorAll(".src-tab").forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll(".src-tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".src-block").forEach(p => p.classList.remove("active"));
+                tab.classList.add("active");
+                document.getElementById("src-" + tab.dataset.src).classList.add("active");
+            };
+        });
+    </script>
+</body>
+
+</html>
